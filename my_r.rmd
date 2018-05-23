@@ -16,6 +16,7 @@ data$type = as.factor(data$type)
 
 
 ### KNN
+```{R}
 install.packages("class")
 library(class)
 #(1)設定亂數種子
@@ -35,9 +36,11 @@ k_set <- as.integer(sqrt(n))
 pred <- knn(train = traindata[-7], test = testdata[-7], cl = train_y, k = k_set)
 #(7) 混淆矩陣計算準確度
 message("準確度：",sum(diag(table(test_y,pred))) / sum(table(test_y,pred)) *100,"%")
+```
 
 
 ### 決策樹
+```{R}
 # 一次安裝所有packages
 packages <- c("C50","tree", "rpart","randomForest")
 for (i in packages){  install.packages(i) }
@@ -71,9 +74,11 @@ y_hat= predict(data.C50tree,data.test,type='class')
 table.test=table(y,y_hat)
 cat("Total records(train)=",nrow(data.test),"\n")
 cat("Correct Classification Ratio(test)=",sum(diag(table.test))/sum(table.test)*100,"%\n")
+```
 
 
 ### 隨機森林
+```{R}
 #沿用C50的訓練樣本70%與測試樣本30%
 #模型訓練
 data.RFtree = randomForest(type ~ ., data=data.train, importane=T, proximity =TRUE, ntree=3000)
@@ -94,9 +99,11 @@ cat("Correct Classification Ratio(test)=", sum(diag(table.test))/sum(table.test)
 (data.clutRF=randomForest(data[,-7]))
 #繪圖 Multi-Dimension plot 
 MDSplot(data.clutRF,data$type)
+```
 
 
 ### ANN
+```{R}
 #原typet資料為數字會造成之後建模混淆 , 故將資料改成 1->happy 2->sad 3->scary
 data$type = ifelse(data$type == 1,"happy",ifelse(data$type == 2,"sad","scary"))
 install.packages("neuralnet") #多層神經網路:倒傳遞類神經網路
@@ -141,9 +148,11 @@ cf
 table(Test$type,cf$type)
 #  混淆矩陣
 message("準確度：",sum(diag(table(Test$type,cf$type)))/sum(table(Test$type,cf$type))*100,"%")
+```
 
 
 ### SVM
+```{R}
 install.packages("e1071")
 library(e1071)
 # 產生建模與測試樣本
@@ -158,4 +167,4 @@ summary(svm)
 Ypred = predict(svm, Test)
 #  混淆矩陣
 message("準確度：",sum(diag(table(Test$type,Ypred))) / sum(table(Test$type,Ypred)) *100,"%")
-
+```
