@@ -1,0 +1,161 @@
+---
+title: "my_R"
+author: "ching"
+date: "2018年5月23日"
+output: html_document
+---
+
+### 腦波資料進行分群
+
+### 讀取資料
+data<-read.csv("c:/r-workspace/data.csv", header=T, sep=",")
+
+
+### 將type型態轉換
+data$type = as.factor(data$type)
+
+
+### KNN
+install.packages("class")
+library(class)
+#(1)設定亂數種子
+set.seed(123)
+#(2)取得資料筆數
+n <- nrow(data)
+#(3)取得訓練樣本數的index，70%建模，30%驗證
+train_idx <- sample(seq_len(n), size = round(0.7 * n))
+#(4)產出訓練資料與測試資料
+traindata <- data[train_idx,]
+testdata <- data[-train_idx,]
+train_y <- traindata[,7]
+test_y <- testdata[,7]
+#(5)設定K，K通常可以設定為資料筆數的平方根
+k_set <- as.integer(sqrt(n)) 
+#(6)建立模型
+pred <- knn(train = traindata[-7], test = testdata[-7], cl = train_y, k = k_set)
+#(7) 混淆矩陣計算準確度
+message("準確度：",sum(diag(table(test_y,pred))) / sum(table(test_y,pred)) *100,"%")
+
+
+### 決策樹
+# 一次安裝所有packages
+packages <- c("C50","tree", "rpart","randomForest")
+for (i in packages){  install.packages(i) }
+#一次載入packages
+sapply(packages, FUN = library, character.only = TRUE)
+#訓練樣本70%, 測試樣本30%
+install.packages("caret")
+library(caret)
+sample_Index <- createDataPartition(y=data$type,p=0.7,list=FALSE)
+data.train=data[sample_Index,]
+data.test=data[-sample_Index,]
+#確認訓練樣本與測試樣本分不一致
+par(mfrow=c(1,2)) 
+#讓R的繪圖視窗切割成 1 X 2 的方塊
+plot(data.train$type)
+plot(data.test$type)
+#模型訓練
+data.C50tree=C5.0(type~ . ,data=data.train)
+summary(data.C50tree)
+plot(data.C50tree)
+#訓練樣本的混淆矩陣(confusion matrix)與預測正確率
+y = data$type[sample_Index]
+y_hat= predict(data.C50tree,data.train,type='class')
+table.train=table(y,y_hat)
+cat("Total records(train)=",nrow(data.train),"\n")
+#預測正確率 = 矩陣對角對角總和 / 矩陣總和
+cat("Correct Classification Ratio(train)=",sum(diag(table.train))/sum(table.train)*100,"%\n")
+#測試樣本的混淆矩陣(confusion matrix)與預測正確率
+y = data$type[-sample_Index]
+y_hat= predict(data.C50tree,data.test,type='class')
+table.test=table(y,y_hat)
+cat("Total records(train)=",nrow(data.test),"\n")
+cat("Correct Classification Ratio(test)=",sum(diag(table.test))/sum(table.test)*100,"%\n")
+
+
+### 隨機森林
+#沿用C50的訓練樣本70%與測試樣本30%
+#模型訓練
+data.RFtree = randomForest(type ~ ., data=data.train, importane=T, proximity =TRUE, ntree=3000)
+# 可以指定樹的數量
+print(data.RFtree )
+#變數重要性
+(round(importance(data.RFtree ),2))
+# MeanDecreaseGini 值愈高就表示該屬性對於該模型的判別影響愈大，可以做為後續利用其他演算法建模時刪減屬性的依據。
+#訓練樣本的混淆矩陣(confusion matrix)與預測正確率
+table.rf=data.RFtree$confusion
+cat("CORRECTION RATIO(train)=", sum(diag(table.rf)/sum(table.rf))*100,"%\n")
+#測試樣本的混淆矩陣(confusion matrix)與預測正確率
+y = data$type[-sample_Index]
+y_hat = predict(data.RFtree ,newdata=data.test)
+table.test=table(y,y_hat)
+cat("Correct Classification Ratio(test)=", sum(diag(table.test))/sum(table.test)*100,"%\n")
+#分群模型
+(data.clutRF=randomForest(data[,-7]))
+#繪圖 Multi-Dimension plot 
+MDSplot(data.clutRF,data$type)
+
+
+### ANN
+#原typet資料為數字會造成之後建模混淆 , 故將資料改成 1->happy 2->sad 3->scary
+data$type = ifelse(data$type == 1,"happy",ifelse(data$type == 2,"sad","scary"))
+install.packages("neuralnet") #多層神經網路:倒傳遞類神經網路
+install.packages("nnet") #單層神經網路
+library(nnet)
+library(neuralnet)
+# One-hot Encoding
+#因為type是類別型態，這邊轉換成三個output nodes，使用的是class.ind函式() 並和原始的資料合併在一起
+head(class.ind(data$type))
+data_ann <- cbind(data, class.ind(data$type))
+# 產生建模與測試樣本 7:3
+n=0.3*nrow(data_ann)
+test.index=sample(1:nrow(data_ann),n)
+Train=data_ann[-test.index,]
+Test=data_ann[test.index,]
+# 建模
+formula.bpn <- happy + sad + scary ~ lowAlpha + highlowAlpha + lowBeta + highBeta + lowGamma + midGamma
+BNP = neuralnet(formula = formula.bpn,
+hidden=c(3,2),
+data=Train,
+learningrate = 0.01,
+threshold = 0.01,
+stepmax = 5e5
+)
+# 繪製網路圖
+plot(BNP)
+# 預測
+cf=compute(BNP,Test[,1:6]) 
+# 四捨五入後，變成0/1的狀態
+cf <- round(cf$net.result)
+# 把結果轉成data frame的型態
+cf <- as.data.frame(cf)
+# 建立一個新欄位，type
+cf$type <- ""
+# 把預測結果轉回type的型態
+for(i in 1:nrow(cf)){
+  if(cf[i, 1]==1){ cf[i, "type"] <- "happy"}
+  if(cf[i, 2]==1){ cf[i, "type"] <- "sad"}
+  if(cf[i, 3]==1){ cf[i, "type"] <- "scary"}
+}
+cf
+table(Test$type,cf$type)
+#  混淆矩陣
+message("準確度：",sum(diag(table(Test$type,cf$type)))/sum(table(Test$type,cf$type))*100,"%")
+
+
+### SVM
+install.packages("e1071")
+library(e1071)
+# 產生建模與測試樣本
+n=0.3*nrow(data)
+test.index=sample(1:nrow(data),n)
+Train=data[-test.index,]
+Test=data[test.index,]
+# 建模
+svm = svm(type ~ . ,data=Train)
+summary(svm)
+# 測試樣本預測正確率
+Ypred = predict(svm, Test)
+#  混淆矩陣
+message("準確度：",sum(diag(table(Test$type,Ypred))) / sum(table(Test$type,Ypred)) *100,"%")
+
