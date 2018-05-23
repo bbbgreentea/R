@@ -1,17 +1,17 @@
 ---
 title: "my_R"
 author: "ching"
-date: "2018¦~5¤ë23¤é"
+date: "2018å¹´5æœˆ23æ—¥"
 output: html_document
 ---
 
-### ¸£ªi¸ê®Æ¶i¦æ¤À¸s
+### è…¦æ³¢è³‡æ–™é€²è¡Œåˆ†ç¾¤
 
-### Åª¨ú¸ê®Æ
+### è®€å–è³‡æ–™
 data<-read.csv("c:/r-workspace/data.csv", header=T, sep=",")
 
 
-### ±Ntype«¬ºAÂà´«
+### å°‡typeå‹æ…‹è½‰æ›
 data$type = as.factor(data$type)
 
 
@@ -19,56 +19,56 @@ data$type = as.factor(data$type)
 ```{R}
 install.packages("class")
 library(class)
-#(1)³]©w¶Ã¼ÆºØ¤l
+#(1)è¨­å®šäº‚æ•¸ç¨®å­
 set.seed(123)
-#(2)¨ú±o¸ê®Æµ§¼Æ
+#(2)å–å¾—è³‡æ–™ç­†æ•¸
 n <- nrow(data)
-#(3)¨ú±o°V½m¼Ë¥»¼Æªºindex¡A70%«Ø¼Ò¡A30%ÅçÃÒ
+#(3)å–å¾—è¨“ç·´æ¨£æœ¬æ•¸çš„indexï¼Œ70%å»ºæ¨¡ï¼Œ30%é©—è­‰
 train_idx <- sample(seq_len(n), size = round(0.7 * n))
-#(4)²£¥X°V½m¸ê®Æ»P´ú¸Õ¸ê®Æ
+#(4)ç”¢å‡ºè¨“ç·´è³‡æ–™èˆ‡æ¸¬è©¦è³‡æ–™
 traindata <- data[train_idx,]
 testdata <- data[-train_idx,]
 train_y <- traindata[,7]
 test_y <- testdata[,7]
-#(5)³]©wK¡AK³q±`¥i¥H³]©w¬°¸ê®Æµ§¼Æªº¥­¤è®Ú
+#(5)è¨­å®šKï¼ŒKé€šå¸¸å¯ä»¥è¨­å®šç‚ºè³‡æ–™ç­†æ•¸çš„å¹³æ–¹æ ¹
 k_set <- as.integer(sqrt(n)) 
-#(6)«Ø¥ß¼Ò«¬
+#(6)å»ºç«‹æ¨¡å‹
 pred <- knn(train = traindata[-7], test = testdata[-7], cl = train_y, k = k_set)
-#(7) ²V²c¯x°}­pºâ·Ç½T«×
-message("·Ç½T«×¡G",sum(diag(table(test_y,pred))) / sum(table(test_y,pred)) *100,"%")
+#(7) æ··æ·†çŸ©é™£è¨ˆç®—æº–ç¢ºåº¦
+message("æº–ç¢ºåº¦ï¼š",sum(diag(table(test_y,pred))) / sum(table(test_y,pred)) *100,"%")
 ```
 
 
-### ¨Mµ¦¾ğ
+### æ±ºç­–æ¨¹
 ```{R}
-# ¤@¦¸¦w¸Ë©Ò¦³packages
+# ä¸€æ¬¡å®‰è£æ‰€æœ‰packages
 packages <- c("C50","tree", "rpart","randomForest")
 for (i in packages){  install.packages(i) }
-#¤@¦¸¸ü¤Jpackages
+#ä¸€æ¬¡è¼‰å…¥packages
 sapply(packages, FUN = library, character.only = TRUE)
-#°V½m¼Ë¥»70%, ´ú¸Õ¼Ë¥»30%
+#è¨“ç·´æ¨£æœ¬70%, æ¸¬è©¦æ¨£æœ¬30%
 install.packages("caret")
 library(caret)
 sample_Index <- createDataPartition(y=data$type,p=0.7,list=FALSE)
 data.train=data[sample_Index,]
 data.test=data[-sample_Index,]
-#½T»{°V½m¼Ë¥»»P´ú¸Õ¼Ë¥»¤À¤£¤@­P
+#ç¢ºèªè¨“ç·´æ¨£æœ¬èˆ‡æ¸¬è©¦æ¨£æœ¬åˆ†ä¸ä¸€è‡´
 par(mfrow=c(1,2)) 
-#ÅıRªºÃ¸¹Ïµøµ¡¤Á³Î¦¨ 1 X 2 ªº¤è¶ô
+#è®“Rçš„ç¹ªåœ–è¦–çª—åˆ‡å‰²æˆ 1 X 2 çš„æ–¹å¡Š
 plot(data.train$type)
 plot(data.test$type)
-#¼Ò«¬°V½m
+#æ¨¡å‹è¨“ç·´
 data.C50tree=C5.0(type~ . ,data=data.train)
 summary(data.C50tree)
 plot(data.C50tree)
-#°V½m¼Ë¥»ªº²V²c¯x°}(confusion matrix)»P¹w´ú¥¿½T²v
+#è¨“ç·´æ¨£æœ¬çš„æ··æ·†çŸ©é™£(confusion matrix)èˆ‡é æ¸¬æ­£ç¢ºç‡
 y = data$type[sample_Index]
 y_hat= predict(data.C50tree,data.train,type='class')
 table.train=table(y,y_hat)
 cat("Total records(train)=",nrow(data.train),"\n")
-#¹w´ú¥¿½T²v = ¯x°}¹ï¨¤¹ï¨¤Á`©M / ¯x°}Á`©M
+#é æ¸¬æ­£ç¢ºç‡ = çŸ©é™£å°è§’å°è§’ç¸½å’Œ / çŸ©é™£ç¸½å’Œ
 cat("Correct Classification Ratio(train)=",sum(diag(table.train))/sum(table.train)*100,"%\n")
-#´ú¸Õ¼Ë¥»ªº²V²c¯x°}(confusion matrix)»P¹w´ú¥¿½T²v
+#æ¸¬è©¦æ¨£æœ¬çš„æ··æ·†çŸ©é™£(confusion matrix)èˆ‡é æ¸¬æ­£ç¢ºç‡
 y = data$type[-sample_Index]
 y_hat= predict(data.C50tree,data.test,type='class')
 table.test=table(y,y_hat)
@@ -77,50 +77,50 @@ cat("Correct Classification Ratio(test)=",sum(diag(table.test))/sum(table.test)*
 ```
 
 
-### ÀH¾÷´ËªL
+### éš¨æ©Ÿæ£®æ—
 ```{R}
-#ªu¥ÎC50ªº°V½m¼Ë¥»70%»P´ú¸Õ¼Ë¥»30%
-#¼Ò«¬°V½m
+#æ²¿ç”¨C50çš„è¨“ç·´æ¨£æœ¬70%èˆ‡æ¸¬è©¦æ¨£æœ¬30%
+#æ¨¡å‹è¨“ç·´
 data.RFtree = randomForest(type ~ ., data=data.train, importane=T, proximity =TRUE, ntree=3000)
-# ¥i¥H«ü©w¾ğªº¼Æ¶q
+# å¯ä»¥æŒ‡å®šæ¨¹çš„æ•¸é‡
 print(data.RFtree )
-#ÅÜ¼Æ­«­n©Ê
+#è®Šæ•¸é‡è¦æ€§
 (round(importance(data.RFtree ),2))
-# MeanDecreaseGini ­È·U°ª´Nªí¥Ü¸ÓÄİ©Ê¹ï©ó¸Ó¼Ò«¬ªº§P§O¼vÅT·U¤j¡A¥i¥H°µ¬°«áÄò§Q¥Î¨ä¥Lºtºâªk«Ø¼Ò®É§R´îÄİ©Êªº¨Ì¾Ú¡C
-#°V½m¼Ë¥»ªº²V²c¯x°}(confusion matrix)»P¹w´ú¥¿½T²v
+# MeanDecreaseGini å€¼æ„ˆé«˜å°±è¡¨ç¤ºè©²å±¬æ€§å°æ–¼è©²æ¨¡å‹çš„åˆ¤åˆ¥å½±éŸ¿æ„ˆå¤§ï¼Œå¯ä»¥åšç‚ºå¾ŒçºŒåˆ©ç”¨å…¶ä»–æ¼”ç®—æ³•å»ºæ¨¡æ™‚åˆªæ¸›å±¬æ€§çš„ä¾æ“šã€‚
+#è¨“ç·´æ¨£æœ¬çš„æ··æ·†çŸ©é™£(confusion matrix)èˆ‡é æ¸¬æ­£ç¢ºç‡
 table.rf=data.RFtree$confusion
 cat("CORRECTION RATIO(train)=", sum(diag(table.rf)/sum(table.rf))*100,"%\n")
-#´ú¸Õ¼Ë¥»ªº²V²c¯x°}(confusion matrix)»P¹w´ú¥¿½T²v
+#æ¸¬è©¦æ¨£æœ¬çš„æ··æ·†çŸ©é™£(confusion matrix)èˆ‡é æ¸¬æ­£ç¢ºç‡
 y = data$type[-sample_Index]
 y_hat = predict(data.RFtree ,newdata=data.test)
 table.test=table(y,y_hat)
 cat("Correct Classification Ratio(test)=", sum(diag(table.test))/sum(table.test)*100,"%\n")
-#¤À¸s¼Ò«¬
+#åˆ†ç¾¤æ¨¡å‹
 (data.clutRF=randomForest(data[,-7]))
-#Ã¸¹Ï Multi-Dimension plot 
+#ç¹ªåœ– Multi-Dimension plot 
 MDSplot(data.clutRF,data$type)
 ```
 
 
 ### ANN
 ```{R}
-#­ìtypet¸ê®Æ¬°¼Æ¦r·|³y¦¨¤§«á«Ø¼Ò²V²c , ¬G±N¸ê®Æ§ï¦¨ 1->happy 2->sad 3->scary
+#åŸtypetè³‡æ–™ç‚ºæ•¸å­—æœƒé€ æˆä¹‹å¾Œå»ºæ¨¡æ··æ·† , æ•…å°‡è³‡æ–™æ”¹æˆ 1->happy 2->sad 3->scary
 data$type = ifelse(data$type == 1,"happy",ifelse(data$type == 2,"sad","scary"))
-install.packages("neuralnet") #¦h¼h¯«¸gºô¸ô:­Ë¶Ç»¼Ãş¯«¸gºô¸ô
-install.packages("nnet") #³æ¼h¯«¸gºô¸ô
+install.packages("neuralnet") #å¤šå±¤ç¥ç¶“ç¶²è·¯:å€’å‚³éé¡ç¥ç¶“ç¶²è·¯
+install.packages("nnet") #å–®å±¤ç¥ç¶“ç¶²è·¯
 library(nnet)
 library(neuralnet)
 # One-hot Encoding
-#¦]¬°type¬OÃş§O«¬ºA¡A³oÃäÂà´«¦¨¤T­Óoutput nodes¡A¨Ï¥Îªº¬Oclass.ind¨ç¦¡() ¨Ã©M­ì©lªº¸ê®Æ¦X¨Ö¦b¤@°_
+#å› ç‚ºtypeæ˜¯é¡åˆ¥å‹æ…‹ï¼Œé€™é‚Šè½‰æ›æˆä¸‰å€‹output nodesï¼Œä½¿ç”¨çš„æ˜¯class.indå‡½å¼() ä¸¦å’ŒåŸå§‹çš„è³‡æ–™åˆä½µåœ¨ä¸€èµ·
 head(class.ind(data$type))
 data_ann <- cbind(data, class.ind(data$type))
-# ²£¥Í«Ø¼Ò»P´ú¸Õ¼Ë¥» 7:3
+# ç”¢ç”Ÿå»ºæ¨¡èˆ‡æ¸¬è©¦æ¨£æœ¬ 7:3
 n=0.3*nrow(data_ann)
 test.index=sample(1:nrow(data_ann),n)
 Train=data_ann[-test.index,]
 Test=data_ann[test.index,]
-# «Ø¼Ò
-formula.bpn <- happy + sad + scary ~ lowAlpha + highlowAlpha + lowBeta + highBeta + lowGamma + midGamma
+# å»ºæ¨¡
+formula.bpn <- happy + sad + scary ~ lowAlpha + highAlpha + lowBeta + highBeta + lowGamma + midGamma
 BNP = neuralnet(formula = formula.bpn,
 hidden=c(3,2),
 data=Train,
@@ -128,17 +128,17 @@ learningrate = 0.01,
 threshold = 0.01,
 stepmax = 5e5
 )
-# Ã¸»sºô¸ô¹Ï
+# ç¹ªè£½ç¶²è·¯åœ–
 plot(BNP)
-# ¹w´ú
+# é æ¸¬
 cf=compute(BNP,Test[,1:6]) 
-# ¥|±Ë¤­¤J«á¡AÅÜ¦¨0/1ªºª¬ºA
+# å››æ¨äº”å…¥å¾Œï¼Œè®Šæˆ0/1çš„ç‹€æ…‹
 cf <- round(cf$net.result)
-# §âµ²ªGÂà¦¨data frameªº«¬ºA
+# æŠŠçµæœè½‰æˆdata frameçš„å‹æ…‹
 cf <- as.data.frame(cf)
-# «Ø¥ß¤@­Ó·sÄæ¦ì¡Atype
+# å»ºç«‹ä¸€å€‹æ–°æ¬„ä½ï¼Œtype
 cf$type <- ""
-# §â¹w´úµ²ªGÂà¦^typeªº«¬ºA
+# æŠŠé æ¸¬çµæœè½‰å›typeçš„å‹æ…‹
 for(i in 1:nrow(cf)){
   if(cf[i, 1]==1){ cf[i, "type"] <- "happy"}
   if(cf[i, 2]==1){ cf[i, "type"] <- "sad"}
@@ -146,8 +146,8 @@ for(i in 1:nrow(cf)){
 }
 cf
 table(Test$type,cf$type)
-#  ²V²c¯x°}
-message("·Ç½T«×¡G",sum(diag(table(Test$type,cf$type)))/sum(table(Test$type,cf$type))*100,"%")
+#  æ··æ·†çŸ©é™£
+message("æº–ç¢ºåº¦ï¼š",sum(diag(table(Test$type,cf$type)))/sum(table(Test$type,cf$type))*100,"%")
 ```
 
 
@@ -155,16 +155,16 @@ message("·Ç½T«×¡G",sum(diag(table(Test$type,cf$type)))/sum(table(Test$type,cf$ty
 ```{R}
 install.packages("e1071")
 library(e1071)
-# ²£¥Í«Ø¼Ò»P´ú¸Õ¼Ë¥»
+# ç”¢ç”Ÿå»ºæ¨¡èˆ‡æ¸¬è©¦æ¨£æœ¬
 n=0.3*nrow(data)
 test.index=sample(1:nrow(data),n)
 Train=data[-test.index,]
 Test=data[test.index,]
-# «Ø¼Ò
+# å»ºæ¨¡
 svm = svm(type ~ . ,data=Train)
 summary(svm)
-# ´ú¸Õ¼Ë¥»¹w´ú¥¿½T²v
+# æ¸¬è©¦æ¨£æœ¬é æ¸¬æ­£ç¢ºç‡
 Ypred = predict(svm, Test)
-#  ²V²c¯x°}
-message("·Ç½T«×¡G",sum(diag(table(Test$type,Ypred))) / sum(table(Test$type,Ypred)) *100,"%")
+#  æ··æ·†çŸ©é™£
+message("æº–ç¢ºåº¦ï¼š",sum(diag(table(Test$type,Ypred))) / sum(table(Test$type,Ypred)) *100,"%")
 ```
